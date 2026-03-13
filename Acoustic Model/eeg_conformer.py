@@ -2,7 +2,6 @@
 """
 
 EEG Conformer Architecture (CNN + Transformer)
-@author: Zhe Wang, YiWei Hou
 
 """
 
