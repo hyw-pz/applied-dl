@@ -1,0 +1,44 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# DBConformer v2 configuration
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Dataset
+data_name:   NeuralPhoneme
+session:     t15.2023.08.18
+drive_dir:   /content/drive/MyDrive/hdf5_data_final/
+local_dir:   /content/local_data/hdf5_data_final
+max_files:   null           # null = load all sessions
+
+# Neural signal
+chn:             512        # number of electrode channels
+time_sample_num: 1500       # max T cap (timesteps)
+
+# DBConformer architecture
+backbone:               DBConformer
+emb_size:               512
+spa_dim:                16
+transformer_depth_tem:  6
+transformer_depth_chn:  6
+temporal_kernel:        15   # Conv1d kernel in Stem
+pool_kernel:            15   # AvgPool1d kernel
+pool_stride:            8    # AvgPool1d stride
+gate_flag:              false
+posemb_flag:            true
+chn_atten_flag:         true
+branch:                 all
+
+# CTC head
+ffn_hidden:  1024
+class_num:   41             # NUM_PHONEMES (BLANK + 39 ARPAbet + '|')
+
+# Training — Phase 1
+dropoutRate:   0.3
+lr:            1.0e-3
+batch_size:    28
+max_epoch:     100
+eval_interval: 5
+
+# Training — Phase 3 fine-tuning
+phase3_lr:         1.0e-4
+phase3_epochs:     50
+phase3_save_dir:   ./runs_phase3

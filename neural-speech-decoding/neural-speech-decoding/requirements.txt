@@ -1,0 +1,27 @@
+torch>=2.0.0
+torchvision
+einops
+timm
+h5py
+numpy
+pandas
+matplotlib
+seaborn
+tqdm
+
+# HuggingFace ecosystem
+transformers>=4.40.0
+datasets>=2.18.0
+evaluate>=0.4.0
+peft>=0.10.0
+trl>=0.8.0
+accelerate>=0.29.0
+bitsandbytes>=0.46.1
+
+# Metrics
+jiwer>=3.0.0
+rouge_score
+
+# Utilities
+scikit-learn
+PyYAML
