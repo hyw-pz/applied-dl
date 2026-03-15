@@ -121,15 +121,15 @@ All subsequent results were generated using a BEAM size of 4 during decoding.
 ---
 ## Training Time & Hardware
 
-| Model | Variant | Hardware | Time (100 epochs) |
-|---|---|---|---|
-| EEGConformer | emb=128 | | |
-| DBConformer | emb=128 |T4 |0.5h |
-| DBConformer | emb=256 |L4 |0.5h |
-| DBConformer | emb=512 |L4 |~1h |
-| BART-base | 20% GT + 60% synth + 20% predicted | | |
-| BART-large | 20% GT + 60% synth + 20% predicted | | |
-| Qwen2.5-7B | QLoRA fine-tuning | | |
+| Model | Variant | Hardware | Time epochs | Epochs |
+|---|---|---|---|---|
+| EEGConformer | emb=128 |L4 |10h |120 |
+| DBConformer | emb=128 |T4 |0.5h |100 |
+| DBConformer | emb=256 |L4 |0.5h |100 |
+| DBConformer | emb=512 |L4 |~1h |100 |
+| BART-base | 50% GT + 50% predicted |L4 |0.5h |50 |
+| BART-large | 50% GT + 50% predicted |L4 |1h |50 |
+| Qwen2.5-7B | 20% GT + 60% synth + 20% predicted |L4 |7h |3|
 
 ---
 ## Uncertainty Estimation
