@@ -106,15 +106,14 @@ Below are the results for the First stage.
 
 All subsequent results were generated using a BEAM size of 4 during decoding.
 
-| Model | Training Data| Average WER | Median WER |
-|---|---|---|---|
-| Qwen2.5-7B (QLoRA) | 20% GT + 60% synth + 20% predicted | 0.224 | 0.12 |
-| GPT-4o-mini (few-shot) | Few shots prompting | 0.38 | 0.29 |
-| BART-base | 50% GT + 50% predicted | 0.248 | 0.20 |
-| BART-base + synthetic | 25% GT + 25% synth + 50% predicted | 0.273 | 0.20 |
-| BART-large | 50% GT + 50% predicted | 0.249 | 0.20 |
-| BART-large + synthetic | 20% GT + 60% synth + 20% predicted | 0.275 | 0.20 |
-| Byt5-small | 50% GT + 50% predicted  | 0.407 | 0.40 |
+| Model | Training Data| Average WER | Median WER | BLEU | ROUGE-1 | ROUGE-2 | ROUGE-L |
+|---|---|---|---|---|---|---|---|
+| Qwen2.5-7B (QLoRA) | 20% GT + 60% synth + 20% predicted | 0.224 | 0.12 | 0.645 | 0.804 | 0.693 | 0.804 |
+| BART-base | 50% GT + 50% predicted | 0.248 | 0.20 | 0.591 | 0.760 | 0.629 | 0.7594 |
+| BART-base + synthetic | 25% GT + 25% synth + 50% predicted | 0.273 | 0.20 | 0.582 | 0.744 | 0.622 | 0.744 |
+| BART-large | 50% GT + 50% predicted | 0.249 | 0.20 | 0.588 | 0.758 | 0.626 | 0.757 |
+| BART-large + synthetic | 20% GT + 60% synth + 20% predicted | 0.275 | 0.20 | 0.571 | 0.742 | 0.613 | 0.742 |
+| Byt5-small | 50% GT + 50% predicted  | 0.407 | 0.40 | 0.37 | 0.655 | 0.482 | 0.654 |
 
 ---
 
