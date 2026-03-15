@@ -94,8 +94,9 @@ neural-speech-decoding/
 
 Both models output CTC logits over a 41-class phoneme vocabulary (ARPAbet + BLANK + word-boundary `|`).
 
+Below are the results for the First stage. 
 | Model | Embedding Size| Parameter Count | Average PER | Median PER |
-|---|---|---|---|
+|---|---|---|---|---|
 |EEG Conformer| 128 | 1.3 Million | 0.272 | 0.258 |
 |DBConformer| 128 |  |  |  |
 |DBConformer| 256 |  |  |  |
@@ -103,7 +104,7 @@ Both models output CTC logits over a 41-class phoneme vocabulary (ARPAbet + BLAN
 
 ### Language Models
 
-All subsequent results were generated using a beam size of 4 during decoding.
+All subsequent results were generated using a BEAM size of 4 during decoding.
 
 | Model | Training Data| Average WER | Median WER |
 |---|---|---|---|
