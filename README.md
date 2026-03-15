@@ -166,7 +166,29 @@ LOGIT_TO_PHONEME = [
 ```
 
 ---
+## Pretrained Checkpoints & Data
 
+### Model Weights
+
+All pretrained checkpoints are available on Google Drive. Download and place them in the corresponding paths before running any notebook.
+
+| Model | Download |
+|---|---|
+| EEGConformer (Phase 2 best) | [Google Drive](YOUR_LINK_HERE) |
+| DBConformer v2 (Phase 3 best, emb=512) | [Google Drive](https://drive.google.com/file/d/1HDd2hpQWyXWH61_SrKY3DA5t30iMq1FZ/view?usp=drive_link) |
+| BART-large + synthetic data | [Google Drive](https://drive.google.com/drive/folders/1lUDsz2-Bvsg623hJzEg7X9eizkTYKgLi?usp=drive_link) |
+| Qwen2.5-7B LoRA adapter | [Google Drive](https://drive.google.com/drive/folders/1iQFunPJHNK-2_kzuwg4_z3-u7PaslCn9?usp=drive_link) |
+
+### Data
+
+The preprocessed data index files are not included in this repository due to file size (~2 GB). Download them and place both files in the repo root before running any notebook.
+
+| File | Download |
+|---|---|
+| `train_index_merged.pkl` | [Google Drive](https://drive.google.com/file/d/10mMEx-yn7JWrduQ-7DJEcGzqCZPwCEy3/view?usp=drive_link) |
+| `val_index_merged.pkl` | [Google Drive](https://drive.google.com/file/d/1jumosK6v5lngly8MzqbpkDEjyaSdxMRE/view?usp=drive_link) |
+
+---
 ## Quick Start
 
 ### 1. Install dependencies
