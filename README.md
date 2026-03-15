@@ -105,7 +105,7 @@ Below are the results for the First stage.
 |DBConformer| 256 | 9.8 Million | 0.179 |0.154  |
 |DBConformer| 512 | 38.5 Million | 0.124 |0.090  |
 
-The distribution of PER for the best-performing model DBConformer (512):
+The distribution of phoneme error rate (PER) for the best-performing model DBConformer (512):
 
 ![](result_plots/AM.png)
 
@@ -145,7 +145,7 @@ The distribution of WER for the best-performing model Qwen2.5-7B (QLoRA) + synth
 
 Two uncertainty signals are computed at inference time:
 
-- **AM Uncertainty**: negative mean of max log-prob phoneme error rate (PER) CTC timestep (lower = more confident)
+- **AM Uncertainty**: negative mean of max log-prob PER CTC timestep (lower = more confident)
 - **LM Uncertainty**: negative beam-search sequence score (lower = more confident)
 
 Confidence levels are assigned based on LM uncertainty thresholds:
