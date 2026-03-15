@@ -90,20 +90,31 @@ neural-speech-decoding/
 | Model | Description | Key Features |
 |---|---|---|
 | **EEGConformer** | CNN + Transformer, single-branch | 2D temporal conv, sinusoidal pos-encoding |
-| **DBConformer v2** | Dual-branch (temporal + spatial) | FlashAttention, AMP, OneCycleLR |
+| **DBConformer** | Dual-branch (temporal + spatial) | FlashAttention, AMP, OneCycleLR |
 
 Both models output CTC logits over a 41-class phoneme vocabulary (ARPAbet + BLANK + word-boundary `|`).
 
+Below are the results for the First stage. 
+| Model | Embedding Size| Parameter Count | Average PER | Median PER |
+|---|---|---|---|---|
+|EEG Conformer| 128 | 1.3 Million | 0.272 | 0.258 |
+|DBConformer| 128 |  |  |  |
+|DBConformer| 256 |  |  |  |
+|DBConformer| 512 |  |  |  |
+
 ### Language Models
 
-| Model | Training Data | WER |
-|---|---|---|
-| BART-base | 50% GT + 50% predicted | — |
-| BART-base + synthetic | 25% GT + 25% synth + 50% predicted | — |
-| BART-large | 50% GT + 50% predicted | — |
-| BART-large + synthetic | 20% GT + 60% synth + 20% predicted | — |
-| Qwen2.5-7B (QLoRA) | Synthetic-augmented | — |
-| GPT-4o-mini (few-shot) | Zero-shot prompting | — |
+All subsequent results were generated using a BEAM size of 4 during decoding.
+
+| Model | Training Data| Average WER | Median WER |
+|---|---|---|---|
+| Qwen2.5-7B (QLoRA) | 20% GT + 60% synth + 20% predicted | 0.224 | 0.12 |
+| GPT-4o-mini (few-shot) | Few shots prompting | 0.38 | 0.29 |
+| BART-base | 50% GT + 50% predicted | 0.248 | 0.20 |
+| BART-base + synthetic | 25% GT + 25% synth + 50% predicted | 0.273 | 0.20 |
+| BART-large | 50% GT + 50% predicted | 0.249 | 0.20 |
+| BART-large + synthetic | 20% GT + 60% synth + 20% predicted | 0.275 | 0.20 |
+| Byt5-small | 50% GT + 50% predicted  | 0.407 | 0.40 |
 
 ---
 
