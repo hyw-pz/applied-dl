@@ -103,7 +103,7 @@ Below are the results for the First stage.
 |EEG Conformer| 128 | 1.3 Million | 0.272 | 0.258 |
 |DBConformer| 128 | 2.6 Million |0.193  |0.175  |
 |DBConformer| 256 | 9.8 Million | 0.179 |0.154  |
-|DBConformer| 512 | 38.5 Million | 0.124 |0.094  |
+|DBConformer| 512 | 38.5 Million | 0.124 |0.090  |
 
 ### Language Models
 
