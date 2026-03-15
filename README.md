@@ -105,6 +105,10 @@ Below are the results for the First stage.
 |DBConformer| 256 | 9.8 Million | 0.179 |0.154  |
 |DBConformer| 512 | 38.5 Million | 0.124 |0.090  |
 
+The distribution of PER for the best-performing model DBConformer (512):
+
+![](result_plots/AM.png)
+
 ### Language Models
 
 All subsequent results were generated using a BEAM size of 4 during decoding.
@@ -112,12 +116,16 @@ All subsequent results were generated using a BEAM size of 4 during decoding.
 | Model | Training Data| Average WER | Median WER | BLEU | ROUGE-1 | ROUGE-2 | ROUGE-L |
 |---|---|---|---|---|---|---|---|
 | Qwen2.5-7B (QLoRA) | 50% GT + 50% predicted | 0.243 | 0.17 | 0.595 | 0.783 | 0.658 | 0.7829 |
-| Qwen2.5-7B (QLoRA) | 20% GT + 60% synth + 20% predicted | 0.224 | 0.12 | 0.645 | 0.804 | 0.693 | 0.804 |
+| Qwen2.5-7B (QLoRA) + synthetic | 20% GT + 60% synth + 20% predicted | 0.224 | 0.12 | 0.645 | 0.804 | 0.693 | 0.804 |
 | BART-base | 50% GT + 50% predicted | 0.248 | 0.20 | 0.591 | 0.760 | 0.629 | 0.7594 |
 | BART-base + synthetic | 25% GT + 25% synth + 50% predicted | 0.273 | 0.20 | 0.582 | 0.744 | 0.622 | 0.744 |
 | BART-large | 50% GT + 50% predicted | 0.249 | 0.20 | 0.588 | 0.758 | 0.626 | 0.757 |
 | BART-large + synthetic | 20% GT + 60% synth + 20% predicted | 0.275 | 0.20 | 0.571 | 0.742 | 0.613 | 0.742 |
 | Byt5-small | 50% GT + 50% predicted  | 0.407 | 0.40 | 0.37 | 0.655 | 0.482 | 0.654 |
+
+The distribution of WER for the best-performing model Qwen2.5-7B (QLoRA) + synthetic:
+
+![](result_plots/Language_Model.png)
 
 ---
 ## Training Time & Hardware
