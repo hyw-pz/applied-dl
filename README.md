@@ -100,7 +100,7 @@ Both models output CTC logits over a 41-class phoneme vocabulary (ARPAbet + BLAN
 Below are the results for the First stage. 
 | Model | Embedding Size| Parameter Count | Average PER | Median PER |
 |---|---|---|---|---|
-|EEG Conformer| 128 | 1.3 Million | 0.272 | 0.258 |
+|EEG Conformer| 128 | 1.3 Million | 0.267 | 0.25 |
 |DBConformer| 128 | 2.6 Million |0.193  |0.175  |
 |DBConformer| 256 | 9.8 Million | 0.179 |0.154  |
 |DBConformer| 512 | 38.5 Million | 0.124 |0.090  |
