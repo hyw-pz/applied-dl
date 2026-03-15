@@ -92,8 +92,8 @@ results
 
 | Model | Description | Key Features |
 |---|---|---|
-| **EEGConformer** | CNN + Transformer, single-branch | 2D temporal conv, sinusoidal pos-encoding |
-| **DBConformer** | Dual-branch (temporal + spatial) | FlashAttention, AMP, OneCycleLR |
+| **EEGConformer** | CNN + Transformer, single-branch | 2D spatio-temporal convolutions, overlapping temporal patches (separated kernel/stride), FlashAttention with mask threading, continuous sequence decoding (CTC head without global pooling) |
+| **DBConformer** | Dual-branch (temporal + spatial) | Separable 1D convolutions, bypassed spatial branch for strict temporal alignment, overlapping temporal patches, reversed dropout/pooling order, FlashAttention with mask threading, deep position-wise CTC head |
 
 Both models output CTC logits over a 41-class phoneme vocabulary (ARPAbet + BLANK + word-boundary `|`).
 
