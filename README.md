@@ -119,7 +119,19 @@ All subsequent results were generated using a BEAM size of 4 during decoding.
 | Byt5-small | 50% GT + 50% predicted  | 0.407 | 0.40 | 0.37 | 0.655 | 0.482 | 0.654 |
 
 ---
+## Training Time & Hardware
 
+| Model | Variant | Hardware | Time (100 epochs) |
+|---|---|---|---|
+| EEGConformer | emb=128 | | |
+| DBConformer | emb=128 |T4 |0.5h |
+| DBConformer | emb=256 |L4 |0.5h |
+| DBConformer | emb=512 |L4 |~1h |
+| BART-base | 20% GT + 60% synth + 20% predicted | | |
+| BART-large | 20% GT + 60% synth + 20% predicted | | |
+| Qwen2.5-7B | QLoRA fine-tuning | | |
+
+---
 ## Uncertainty Estimation
 
 Two uncertainty signals are computed at inference time:
