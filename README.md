@@ -129,7 +129,7 @@ All subsequent results were generated using a BEAM size of 4 during decoding.
 | DBConformer | emb=512 |L4 |~1h |100 |
 | BART-base | 50% GT + 50% predicted |L4 |0.5h |50 |
 | BART-large | 50% GT + 50% predicted |L4 |1h |50 |
-| Qwen2.5-7B | 20% GT + 60% synth + 20% predicted |L4 |7h |3|
+| Qwen2.5-7B (QLoRA) | 20% GT + 60% synth + 20% predicted |L4 |7h |3|
 
 ---
 ## Uncertainty Estimation
