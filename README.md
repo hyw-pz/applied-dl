@@ -176,7 +176,8 @@ All pretrained checkpoints are available on Google Drive. Download and place the
 |---|---|
 | EEGConformer (Phase 2 best) | [Google Drive](https://drive.google.com/file/d/18hm6-xy4p0cPDqscSlBdvhHzShKmTCZ9/view?usp=sharing) |
 | DBConformer v2 (Phase 3 best, emb=512) | [Google Drive](https://drive.google.com/file/d/1HDd2hpQWyXWH61_SrKY3DA5t30iMq1FZ/view?usp=drive_link) |
-| BART-large + synthetic data | [Google Drive](https://drive.google.com/drive/folders/1lUDsz2-Bvsg623hJzEg7X9eizkTYKgLi?usp=drive_link) |
+| BART-base | [Google Drive](https://drive.google.com/drive/folders/1lUDsz2-Bvsg623hJzEg7X9eizkTYKgLi?usp=sharing) |
+| BART-large | [Google Drive](https://drive.google.com/drive/folders/1dk5CUIf1MLJBTEq10BE5AQGktqmye71H?usp=sharing) |
 | Qwen2.5-7B LoRA adapter | [Google Drive](https://drive.google.com/drive/folders/1iQFunPJHNK-2_kzuwg4_z3-u7PaslCn9?usp=drive_link) |
 
 ### Data
