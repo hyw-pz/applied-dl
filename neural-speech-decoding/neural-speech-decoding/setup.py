@@ -1,0 +1,30 @@
+from setuptools import setup, find_packages
+
+setup(
+    name='neural-speech-decoding',
+    version='1.0.0',
+    description='Brain-to-text neural speech decoding via phoneme prediction',
+    packages=find_packages(where='.', include=['src*']),
+    python_requires='>=3.9',
+    install_requires=[
+        'torch>=2.0.0',
+        'einops',
+        'timm',
+        'h5py',
+        'numpy',
+        'pandas',
+        'matplotlib',
+        'seaborn',
+        'tqdm',
+        'transformers>=4.40.0',
+        'datasets>=2.18.0',
+        'evaluate>=0.4.0',
+        'peft>=0.10.0',
+        'trl>=0.8.0',
+        'accelerate>=0.29.0',
+        'bitsandbytes>=0.46.1',
+        'jiwer>=3.0.0',
+        'rouge_score',
+        'PyYAML',
+    ],
+)

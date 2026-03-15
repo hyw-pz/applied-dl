@@ -1,41 +1,44 @@
 """
-model.py
---------
-DBConformer acoustic model with CTC head.
+db_conformer.py
+---------------
+DBConformer v2: Dual-Branch Convolutional Transformer.
+
+v2 improvements over v1:
+  A. FlashAttention (F.scaled_dot_product_attention)
+  B. Pre-LN + explicit Dropout in TransformerEncoderBlock
+  C. Attention mask threaded through all TransformerEncoder layers
+  D. pool_kernel / pool_stride instead of single patch_size in Stem
+  G. Two-layer CTC FFN head (Linear→GELU→Dropout→Linear)
+  H. Dropout 0.5 → 0.3
 
 Architecture:
-  - Dual-Branch Convolutional Transformer (DBConformer)
-  - Temporal branch: Stem CNN + TransformerEncoder
-  - Spatial branch: Per-channel CNN + TransformerEncoder
-  - CTC head: LayerNorm → Linear → GELU → Dropout → Linear
+  Temporal branch: Stem (Conv1d + AvgPool1d) → TransformerEncoder
+  Spatial branch : PatchEmbeddingSpatial (per-channel Conv1d) → TransformerEncoder
+  CTC head applied to temporal branch output only.
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-
 from einops import rearrange
-from einops.layers.torch import Rearrange
 from timm.models.layers import trunc_normal_
-
-from src.vocabulary import NUM_PHONEMES
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Building blocks
+# CNN front-end — temporal branch
 # ─────────────────────────────────────────────────────────────────────────────
 
 class Conv(nn.Module):
     def __init__(self, conv, activation=None, bn=None):
         super().__init__()
-        self.conv = conv
+        self.conv       = conv
         self.activation = activation
         if bn:
             self.conv.bias = None
         self.bn = bn
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.conv(x)
         if self.bn:         x = self.bn(x)
         if self.activation: x = self.activation(x)
@@ -43,28 +46,39 @@ class Conv(nn.Module):
 
 
 class InterFre(nn.Module):
-    def forward(self, x):
+    """Element-wise sum of a list of feature maps, passed through GELU."""
+    def forward(self, x: list) -> Tensor:
         return F.gelu(sum(x))
 
 
 class Stem(nn.Module):
     """
-    Temporal feature extractor:
-    1x1 spatial conv → multi-scale depthwise temporal convs → GELU fusion → AvgPool.
+    Multi-scale temporal convolution + AvgPool downsampling.
+
+    Input  : (B, in_planes, T)
+    Output : (B, out_planes, P)   where P ≈ T / pool_stride
     """
 
-    def __init__(self, data_name, in_planes, out_planes=64,
-                 kernel_size=15, pool_kernel=15, pool_stride=8, radix=2):
+    def __init__(
+        self,
+        data_name: str,
+        in_planes: int,
+        out_planes: int = 64,
+        kernel_size: int = 15,
+        pool_kernel: int = 15,
+        pool_stride: int = 8,
+        radix: int = 2,
+    ):
         super().__init__()
         self.in_planes  = in_planes
         self.out_planes = out_planes
         self.mid_planes = out_planes * radix
         self.radix      = radix
-        self.data_name  = data_name
 
         self.sconv = Conv(
             nn.Conv1d(in_planes, self.mid_planes, 1, bias=False, groups=radix),
-            bn=nn.BatchNorm1d(self.mid_planes))
+            bn=nn.BatchNorm1d(self.mid_planes),
+        )
 
         self.tconv = nn.ModuleList()
         ks = kernel_size
@@ -72,14 +86,15 @@ class Stem(nn.Module):
             self.tconv.append(Conv(
                 nn.Conv1d(out_planes, out_planes, ks, 1,
                           groups=out_planes, padding=ks // 2, bias=False),
-                bn=nn.BatchNorm1d(out_planes)))
+                bn=nn.BatchNorm1d(out_planes),
+            ))
             ks = max(ks // 2, 3)
 
         self.interFre     = InterFre()
         self.downSampling = nn.AvgPool1d(pool_kernel, pool_stride)
         self.dp           = nn.Dropout(0.5)
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         out = self.sconv(x)
         out = torch.split(out, self.out_planes, dim=1)
         out = [m(xi) for xi, m in zip(out, self.tconv)]
@@ -90,9 +105,25 @@ class Stem(nn.Module):
 
 
 class PatchEmbeddingTemporal(nn.Module):
-    def __init__(self, data_name, in_planes, out_planes,
-                 kernel_size, radix, pool_kernel, pool_stride,
-                 time_points, num_classes):
+    """
+    Temporal branch patch embedding: Stem → (B, P, D).
+
+    Input  : (B, C, T)
+    Output : (B, P, D)
+    """
+
+    def __init__(
+        self,
+        data_name: str,
+        in_planes: int,
+        out_planes: int,
+        kernel_size: int,
+        radix: int,
+        pool_kernel: int,
+        pool_stride: int,
+        time_points: int,
+        num_classes: int,
+    ):
         super().__init__()
         self.stem = Stem(
             data_name=data_name,
@@ -116,13 +147,24 @@ class PatchEmbeddingTemporal(nn.Module):
             trunc_normal_(m.weight, std=.01)
             if m.bias is not None: nn.init.constant_(m.bias, 0)
 
-    def forward(self, x):           # (B, C, T)
-        out = self.stem(x)          # (B, D, P)
-        return out.permute(0, 2, 1) # (B, P, D)
+    def forward(self, x: Tensor) -> Tensor:  # x: (B, C, T)
+        out = self.stem(x)         # (B, D, P)
+        return out.permute(0, 2, 1)  # (B, P, D)
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CNN front-end — spatial branch
+# ─────────────────────────────────────────────────────────────────────────────
 
 class PatchEmbeddingSpatial(nn.Module):
-    def __init__(self, spa_dim, emb_size=40):
+    """
+    Per-channel (electrode) spatial embedding.
+
+    Input  : (B, C, T)
+    Output : (B, C, emb_size)
+    """
+
+    def __init__(self, spa_dim: int, emb_size: int = 40):
         super().__init__()
         self.encoder = nn.Sequential(
             nn.Conv1d(1, spa_dim, kernel_size=25, stride=5, padding=12),
@@ -132,11 +174,11 @@ class PatchEmbeddingSpatial(nn.Module):
             nn.Linear(spa_dim, emb_size),
         )
 
-    def forward(self, x):           # (B, C, T)
+    def forward(self, x: Tensor) -> Tensor:  # x: (B, C, T)
         B, C, T = x.shape
         x = x.reshape(B * C, 1, T)
-        x = self.encoder(x)         # (B*C, emb_size)
-        return x.view(B, C, -1)     # (B, C, emb_size)
+        x = self.encoder(x)        # (B*C, emb_size)
+        return x.view(B, C, -1)    # (B, C, emb_size)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -144,7 +186,7 @@ class PatchEmbeddingSpatial(nn.Module):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class MultiHeadAttention(nn.Module):
-    """FlashAttention-compatible scaled dot-product attention."""
+    """FlashAttention-backed MHA (optimisation A)."""
 
     def __init__(self, emb_size: int, num_heads: int, dropout: float):
         super().__init__()
@@ -161,8 +203,10 @@ class MultiHeadAttention(nn.Module):
         Q = rearrange(self.queries(x), 'b n (h d) -> b h n d', h=self.num_heads)
         K = rearrange(self.keys(x),    'b n (h d) -> b h n d', h=self.num_heads)
         V = rearrange(self.values(x),  'b n (h d) -> b h n d', h=self.num_heads)
+
         out = F.scaled_dot_product_attention(
-            Q, K, V, attn_mask=mask,
+            Q, K, V,
+            attn_mask=mask,
             dropout_p=self.dropout_p if self.training else 0.0,
             is_causal=False,
         )
@@ -181,16 +225,20 @@ class FeedForwardBlock(nn.Sequential):
 
 
 class TransformerEncoderBlock(nn.Module):
-    """Pre-LN Transformer encoder block with padding mask support."""
+    """Pre-LN block with explicit Dropout (optimisation B)."""
 
-    def __init__(self, emb_size: int, num_heads: int = 8,
-                 drop_p: float = 0.3, forward_expansion: int = 4,
-                 forward_drop_p: float = 0.3):
+    def __init__(
+        self,
+        emb_size: int,
+        num_heads: int = 8,
+        drop_p: float = 0.3,
+        forward_expansion: int = 4,
+        forward_drop_p: float = 0.3,
+    ):
         super().__init__()
         self.norm1 = nn.LayerNorm(emb_size)
         self.attn  = MultiHeadAttention(emb_size, num_heads, drop_p)
         self.drop1 = nn.Dropout(drop_p)
-
         self.norm2 = nn.LayerNorm(emb_size)
         self.ff    = FeedForwardBlock(emb_size, forward_expansion, forward_drop_p)
         self.drop2 = nn.Dropout(drop_p)
@@ -200,7 +248,6 @@ class TransformerEncoderBlock(nn.Module):
         x   = self.norm1(x)
         x   = self.attn(x, mask=mask)
         x   = res + self.drop1(x)
-
         res = x
         x   = self.norm2(x)
         x   = self.ff(x)
@@ -209,10 +256,13 @@ class TransformerEncoderBlock(nn.Module):
 
 
 class TransformerEncoder(nn.Module):
+    """Stack of TransformerEncoderBlocks; threads mask through every layer (C)."""
+
     def __init__(self, depth: int, emb_size: int):
         super().__init__()
         self.layers = nn.ModuleList(
-            [TransformerEncoderBlock(emb_size) for _ in range(depth)])
+            [TransformerEncoderBlock(emb_size) for _ in range(depth)]
+        )
 
     def forward(self, x: Tensor, mask: Tensor = None) -> Tensor:
         for layer in self.layers:
@@ -221,14 +271,15 @@ class TransformerEncoder(nn.Module):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CTC Head
+# CTC head (optimisation G)
 # ─────────────────────────────────────────────────────────────────────────────
 
 class CTCHead(nn.Module):
     """
-    Two-layer FFN CTC head.
-    Input:  (B, T', emb_size)
-    Output: (T', B, num_classes)   ← format expected by nn.CTCLoss
+    Two-layer FFN CTC head: LayerNorm → Linear → GELU → Dropout → Linear.
+
+    Input  : (B, T', emb_size)
+    Output : (T', B, num_classes)
     """
 
     def __init__(self, emb_size: int, num_classes: int,
@@ -243,8 +294,8 @@ class CTCHead(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        logits = self.ffn(x)           # (B, T', C)
-        return logits.permute(1, 0, 2) # (T', B, C)
+        logits = self.ffn(x)              # (B, T', C)
+        return logits.permute(1, 0, 2)   # (T', B, C)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -253,15 +304,16 @@ class CTCHead(nn.Module):
 
 class DBConformer(nn.Module):
     """
-    Dual-Branch Convolutional Transformer.
+    Dual-Branch Conformer backbone.
 
-    Temporal branch processes the full electrode×time tensor through a CNN
-    patch embedding and multi-layer self-attention.
-    Spatial branch processes per-electrode signals independently.
+    Returns
+    -------
+    x_temporal : (B, P, D)   — full token sequence for CTC head
+    x_spatial  : (B, C, D)   — spatial features (not used for CTC)
     """
 
-    def __init__(self, args, emb_size=128, tem_depth=6, chn_depth=6,
-                 chn=512, n_classes=41):
+    def __init__(self, args, emb_size: int = 128, tem_depth: int = 6,
+                 chn_depth: int = 6, chn: int = 512, n_classes: int = 41):
         super().__init__()
 
         self.embedding = PatchEmbeddingTemporal(
@@ -276,14 +328,14 @@ class DBConformer(nn.Module):
             num_classes=args.class_num,
         )
         self.channel_embedding = PatchEmbeddingSpatial(
-            spa_dim=args.spa_dim, emb_size=emb_size)
+            spa_dim=args.spa_dim, emb_size=emb_size
+        )
 
-        self.C = args.chn
-        self.D = emb_size
-        self.posemb_flag    = args.posemb_flag
-        self.branch         = args.branch
-        self.gate_flag      = args.gate_flag
-        self.chn_atten_flag = args.chn_atten_flag
+        self.C            = args.chn
+        self.D            = emb_size
+        self.gate_flag    = args.gate_flag
+        self.posemb_flag  = args.posemb_flag
+        self.branch       = args.branch
 
         if args.posemb_flag:
             P_init = max(1, args.time_sample_num // args.pool_stride)
@@ -296,35 +348,41 @@ class DBConformer(nn.Module):
         self.spatial_transformer  = TransformerEncoder(chn_depth, emb_size)
 
     def forward(self, x: Tensor, mask: Tensor = None):
-        x = x.squeeze(1)                    # (B, C, T)
+        x = x.squeeze(1)                          # (B, C, T)
 
-        x_embed         = self.embedding(x) # (B, P, D)
+        x_embed         = self.embedding(x)       # (B, P, D)
         x_embed_spatial = self.channel_embedding(x)  # (B, C, D)
 
         if self.posemb_flag:
             pos_tem = F.interpolate(
                 self.pos_embedding_temporal.permute(0, 2, 1),
-                size=x_embed.shape[1], mode='linear', align_corners=False
+                size=x_embed.shape[1], mode='linear', align_corners=False,
             ).permute(0, 2, 1)
             x_embed = x_embed + pos_tem
 
             pos_spa = F.interpolate(
                 self.pos_embedding_spatial.permute(0, 2, 1),
-                size=x_embed_spatial.shape[1], mode='linear', align_corners=False
+                size=x_embed_spatial.shape[1], mode='linear', align_corners=False,
             ).permute(0, 2, 1)
             x_embed_spatial = x_embed_spatial + pos_spa
 
         x_temporal = self.temporal_transformer(x_embed, mask=mask)  # (B, P, D)
-        x_spatial  = self.spatial_transformer(x_embed_spatial)       # (B, C, D)
+        x_spatial  = self.spatial_transformer(x_embed_spatial)      # (B, C, D)
 
-        return x_temporal, None
+        return x_temporal, x_spatial
 
 
 class DBConformerCTC(nn.Module):
     """DBConformer backbone + CTC head."""
 
-    def __init__(self, backbone: DBConformer, emb_size: int,
-                 num_classes: int, ffn_hidden: int = 512, dropout: float = 0.3):
+    def __init__(
+        self,
+        backbone: DBConformer,
+        emb_size: int,
+        num_classes: int,
+        ffn_hidden: int = 512,
+        dropout: float = 0.3,
+    ):
         super().__init__()
         self.backbone = backbone
         self.ctc_head = CTCHead(emb_size, num_classes, ffn_hidden, dropout)
@@ -338,18 +396,9 @@ class DBConformerCTC(nn.Module):
 # Factory
 # ─────────────────────────────────────────────────────────────────────────────
 
-def build_model(args, device: torch.device) -> DBConformerCTC:
-    """
-    Builds and returns a DBConformerCTC model on the specified device.
-
-    Args:
-        args:    argparse.Namespace with all model hyperparameters
-        device:  torch.device
-
-    Returns:
-        DBConformerCTC instance moved to device
-    """
-    backbone = DBConformer(
+def backbone_net_dbconformer(args) -> DBConformer:
+    """Construct DBConformer backbone from an argparse Namespace or similar."""
+    return DBConformer(
         args,
         emb_size=args.emb_size,
         tem_depth=args.transformer_depth_tem,
@@ -357,34 +406,16 @@ def build_model(args, device: torch.device) -> DBConformerCTC:
         chn=args.chn,
         n_classes=args.class_num,
     )
-    model = DBConformerCTC(
+
+
+def build_dbconformer_ctc(args) -> DBConformerCTC:
+    """Build the full DBConformerCTC model from config."""
+    from src.data.preprocessing import NUM_PHONEMES
+    backbone = backbone_net_dbconformer(args)
+    return DBConformerCTC(
         backbone,
         emb_size=args.emb_size,
         num_classes=NUM_PHONEMES,
         ffn_hidden=args.ffn_hidden,
         dropout=args.dropoutRate,
     )
-    return model.to(device)
-
-
-def load_acoustic_model(args, checkpoint_path: str,
-                        device: torch.device) -> DBConformerCTC:
-    """
-    Builds a DBConformerCTC and loads weights from a checkpoint file.
-
-    Args:
-        args:             model config namespace
-        checkpoint_path:  path to .ckpt file
-        device:           target device
-
-    Returns:
-        DBConformerCTC in eval mode
-    """
-    model = build_model(args, device)
-    state_dict = torch.load(checkpoint_path, map_location=device)
-    if "model_state_dict" in state_dict:
-        state_dict = state_dict["model_state_dict"]
-    model.load_state_dict(state_dict)
-    model.eval()
-    print(f"Loaded acoustic model from {checkpoint_path}")
-    return model

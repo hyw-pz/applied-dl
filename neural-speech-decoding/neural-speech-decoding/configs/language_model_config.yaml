@@ -1,0 +1,78 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Language Model configuration
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Acoustic model checkpoint (used to generate training predictions)
+acoustic_ckpt: /content/drive/MyDrive/DBConformer_runs_512/NeuralPhoneme/DBConformerCTC_t15.2023.08.18_best.ckpt
+acoustic_config: configs/db_conformer_config.yaml
+
+# Data mixing ratios for training set
+# gt_ratio + syn_ratio + pred_ratio should sum to ~1.0
+gt_ratio:    0.20
+syn_ratio:   0.60
+pred_ratio:  0.20
+target_per:  0.10   # PER injected into synthetic samples
+
+# ── BART-base ─────────────────────────────────────────────────────────────────
+bart_base:
+  model_checkpoint:   facebook/bart-base
+  max_input_length:   128
+  max_target_length:  128
+  learning_rate:      1.0e-5
+  train_batch_size:   80
+  eval_batch_size:    80
+  weight_decay:       0.01
+  num_epochs:         50
+  early_stopping:     5
+  save_dir:           /content/drive/MyDrive/SpeechModels/BART_base
+
+# ── BART-large ────────────────────────────────────────────────────────────────
+bart_large:
+  model_checkpoint:       facebook/bart-large
+  max_input_length:       128
+  max_target_length:      128
+  learning_rate:          2.0e-7
+  warmup_ratio:           0.1
+  max_grad_norm:          1.0
+  label_smoothing_factor: 0.1
+  train_batch_size:       60
+  eval_batch_size:        60
+  weight_decay:           0.05
+  num_epochs:             50
+  early_stopping:         5
+  save_dir:               /content/drive/MyDrive/SpeechModels/BART_large
+
+# ── Qwen2.5-7B QLoRA ─────────────────────────────────────────────────────────
+qwen:
+  base_model:         Qwen/Qwen2.5-7B-Instruct
+  lora_r:             16
+  lora_alpha:         32
+  lora_dropout:       0.1
+  lora_target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  quant_type:         nf4
+  double_quant:       true
+  compute_dtype:      bfloat16
+  max_seq_length:     256
+  train_batch_size:   8
+  eval_batch_size:    8
+  grad_accum_steps:   2
+  learning_rate:      1.0e-4
+  weight_decay:       0.08
+  num_epochs:         3
+  warmup_ratio:       0.1
+  max_grad_norm:      0.3
+  lr_scheduler:       cosine
+  save_dir:           /content/drive/MyDrive/SpeechModels/Qwen2.5_LoRA
+
+# ── Evaluation ────────────────────────────────────────────────────────────────
+evaluation:
+  beam_size:    4
+  batch_size:   120
+  num_examples: 15
