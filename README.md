@@ -79,6 +79,9 @@ neural-speech-decoding/
 ├── requirements.txt
 ├── setup.py
 └── README.md
+results
+├── BART_large_synthetic_results.csv
+├── Qwen_synthetic_results.csv
 ```
 
 ---
