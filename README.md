@@ -189,7 +189,7 @@ The preprocessed data index files are not included in this repository due to fil
 | `train_index_merged.pkl` | [Google Drive](https://drive.google.com/file/d/10mMEx-yn7JWrduQ-7DJEcGzqCZPwCEy3/view?usp=drive_link) |
 | `val_index_merged.pkl` | [Google Drive](https://drive.google.com/file/d/1jumosK6v5lngly8MzqbpkDEjyaSdxMRE/view?usp=drive_link) |
 
-Original data could be found here: (https://datadryad.org/dataset/doi:10.5061/dryad.dncjsxm85)
+### Original data could be found here: https://datadryad.org/dataset/doi:10.5061/dryad.dncjsxm85
 ---
 ## Quick Start
 
