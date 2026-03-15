@@ -1,6 +1,6 @@
 # Neural Speech Decoding: Brain-to-Text via Phoneme Prediction
 
-A two-stage neural speech decoding pipeline that converts intracortical neural signals into text. The system combines an acoustic model (phoneme prediction) with a language model (phoneme-to-text), and includes uncertainty-aware inference to flag low-confidence predictions. The final results for the validation set could be found in Qwen_Synthetic_Data_Results.csv
+A two-stage neural speech decoding pipeline that converts intracortical neural signals into text. The system combines an acoustic model (phoneme prediction) with a language model (phoneme-to-text), and includes uncertainty-aware inference to flag low-confidence predictions. The final results for the validation set could be found in Qwen_Synthetic_Data_Results.csv.
 
 ---
 
