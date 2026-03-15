@@ -111,6 +111,7 @@ All subsequent results were generated using a BEAM size of 4 during decoding.
 
 | Model | Training Data| Average WER | Median WER | BLEU | ROUGE-1 | ROUGE-2 | ROUGE-L |
 |---|---|---|---|---|---|---|---|
+| Qwen2.5-7B (QLoRA) | 50% GT + 50% predicted | 0.243 | 0.17 | 0.595 | 0.783 | 0.658 | 0.7829 |
 | Qwen2.5-7B (QLoRA) | 20% GT + 60% synth + 20% predicted | 0.224 | 0.12 | 0.645 | 0.804 | 0.693 | 0.804 |
 | BART-base | 50% GT + 50% predicted | 0.248 | 0.20 | 0.591 | 0.760 | 0.629 | 0.7594 |
 | BART-base + synthetic | 25% GT + 25% synth + 50% predicted | 0.273 | 0.20 | 0.582 | 0.744 | 0.622 | 0.744 |
