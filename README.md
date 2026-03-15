@@ -145,7 +145,7 @@ The distribution of WER for the best-performing model Qwen2.5-7B (QLoRA) + synth
 
 Two uncertainty signals are computed at inference time:
 
-- **AM Uncertainty**: negative mean of max log-prob per CTC timestep (lower = more confident)
+- **AM Uncertainty**: negative mean of max log-prob phoneme error rate (PER) CTC timestep (lower = more confident)
 - **LM Uncertainty**: negative beam-search sequence score (lower = more confident)
 
 Confidence levels are assigned based on LM uncertainty thresholds:
