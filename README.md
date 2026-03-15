@@ -90,9 +90,16 @@ neural-speech-decoding/
 | Model | Description | Key Features |
 |---|---|---|
 | **EEGConformer** | CNN + Transformer, single-branch | 2D temporal conv, sinusoidal pos-encoding |
-| **DBConformer v2** | Dual-branch (temporal + spatial) | FlashAttention, AMP, OneCycleLR |
+| **DBConformer** | Dual-branch (temporal + spatial) | FlashAttention, AMP, OneCycleLR |
 
 Both models output CTC logits over a 41-class phoneme vocabulary (ARPAbet + BLANK + word-boundary `|`).
+
+| Model | Embedding Size| Parameter Count | Average PER | Median PER |
+|---|---|---|---|
+|EEG Conformer| 128 | 1.3 Million | 0.272 | 0.258 |
+|DBConformer| 128 |  |  |  |
+|DBConformer| 256 |  |  |  |
+|DBConformer| 512 |  |  |  |
 
 ### Language Models
 
