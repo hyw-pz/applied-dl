@@ -121,7 +121,7 @@ All subsequent results were generated using a BEAM size of 4 during decoding.
 ---
 ## Training Time & Hardware
 
-| Model | Variant | Hardware | Time epochs | Epochs |
+| Model | Variant | Hardware | Time | Epochs |
 |---|---|---|---|---|
 | EEGConformer | emb=128 |L4 |10h |120 |
 | DBConformer | emb=128 |T4 |0.5h |100 |
